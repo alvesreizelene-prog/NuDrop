@@ -1,15 +1,14 @@
-```yaml
 name: Build iOS IPA
 
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   build-ios:
     runs-on: macos-15
-
     steps:
       - name: Baixar o código
         uses: actions/checkout@v4
@@ -17,17 +16,11 @@ jobs:
       - name: Instalar XcodeGen
         run: brew install xcodegen
 
-      - name: Conferir arquivos
-        run: |
-          pwd
-          ls -la
-          cat project.yml
-
       - name: Gerar projeto Xcode
-        run: |
-          xcodegen generate
-          ls -la
-          test -d NuDrop.xcodeproj
+        run: xcodegen generate
+
+      - name: Verificar projeto
+        run: ls -la NuDrop.xcodeproj
 
       - name: Compilar aplicativo
         run: |
@@ -52,4 +45,3 @@ jobs:
         with:
           name: NuDrop-unsigned-ipa
           path: NuDrop-unsigned.ipa
-```
