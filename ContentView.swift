@@ -2,14 +2,24 @@
 import SwiftUI
 import UserNotifications
 
+final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .sound, .list])
+    }
+}
+
 struct ContentView: View {
-    @State private var notificationsEnabled = false
     @State private var amount = "1.200,00"
     @State private var sender = "PAYMANTS BIT LTDA"
-    @State private var count = "7"
     @State private var interval = "1"
     @State private var isMinutes = false
     @State private var status = "Pronto"
+
+    private let center = UNUserNotificationCenter.current()
 
     var body: some View {
         VStack(spacing: 18) {
@@ -27,33 +37,31 @@ struct ContentView: View {
                 .textFieldStyle(.roundedBorder)
 
             HStack {
-                TextField("Quantidade", text: $count)
-                    .keyboardType(.numberPad)
-                    .textFieldStyle(.roundedBorder)
-
                 TextField("Intervalo", text: $interval)
                     .keyboardType(.decimalPad)
                     .textFieldStyle(.roundedBorder)
+
+                Toggle("Minutos", isOn: $isMinutes)
+                    .labelsHidden()
+
+                Text("Minutos")
+                    .font(.caption)
             }
 
-            Toggle("Intervalo em minutos", isOn: $isMinutes)
-
             Button("Ativar notificações") {
-                UNUserNotificationCenter.current()
-                    .requestAuthorization(
-                        options: [.alert, .sound, .badge]
-                    ) { granted, error in
-                        DispatchQueue.main.async {
-                            notificationsEnabled = granted
+                center.requestAuthorization(
+                    options: [.alert, .sound, .badge]
+                ) { granted, error in
+                    DispatchQueue.main.async {
+                        if let error = error {
+                            status = "Erro: \(error.localizedDescription)"
+                        } else {
                             status = granted
                                 ? "Permissão concedida"
-                                : "Permissão não concedida"
-
-                            if let error = error {
-                                status = error.localizedDescription
-                            }
+                                : "Permissão negada nos Ajustes"
                         }
                     }
+                }
             }
             .buttonStyle(.bordered)
 
@@ -73,28 +81,37 @@ struct ContentView: View {
                 .foregroundColor(.secondary)
         }
         .padding()
+        .onAppear {
+            center.delegate = NotificationDelegate.shared
+        }
     }
 
     private func sendTestNotification() {
-        let center = UNUserNotificationCenter.current()
-
         center.getNotificationSettings { settings in
-            guard settings.authorizationStatus == .authorized else {
+            guard settings.authorizationStatus == .authorized ||
+                  settings.authorizationStatus == .provisional else {
                 DispatchQueue.main.async {
                     status = "Ative as notificações nos Ajustes."
                 }
                 return
             }
 
-            let delayValue = Double(
+            let value = Double(
                 interval.replacingOccurrences(of: ",", with: ".")
             ) ?? 1
 
-            let delay = max(1, delayValue * (isMinutes ? 60 : 1))
+            guard value > 0 else {
+                DispatchQueue.main.async {
+                    status = "Digite um intervalo maior que zero."
+                }
+                return
+            }
+
+            let delay = max(1, value * (isMinutes ? 60 : 1))
 
             let content = UNMutableNotificationContent()
-            content.title = "NuDrop — Teste"
-            content.body = "Valor: R$ \(amount) | Remetente: \(sender)"
+            content.title = "Transferência recebida (teste)"
+            content.body = "Você recebeu R$ \(amount) de \(sender)."
             content.sound = .default
 
             let trigger = UNTimeIntervalNotificationTrigger(
@@ -110,11 +127,15 @@ struct ContentView: View {
 
             center.add(request) { error in
                 DispatchQueue.main.async {
-                    status = error == nil
-                        ? "Notificação de teste agendada."
-                        : "Erro ao agendar a notificação."
+                    status = error.map {
+                        "Erro: \($0.localizedDescription)"
+                    } ?? "Teste agendado para daqui a \(Int(delay)) segundo(s)."
                 }
             }
         }
     }
+}
+
+extension NotificationDelegate {
+    static let shared = NotificationDelegate()
 }
