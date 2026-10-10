@@ -13,6 +13,8 @@ targets:
       - NuDropApp.swift
       - ContentView.swift
       - Assets.xcassets
+    resources:
+      - path: Resources/logo.png
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.teste.nudrop
