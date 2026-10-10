@@ -35,6 +35,24 @@ jobs:
             ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon \
             build
 
+
+
+      - name: Verificar ícone compilado
+        run: |
+          APP_PATH="build/Build/Products/Release-iphoneos/NuDrop.app"
+
+          echo "=== Informações do ícone no Info.plist ==="
+          /usr/libexec/PlistBuddy \
+            -c 'Print :CFBundleIcons' \
+            "$APP_PATH/Info.plist" || true
+
+          echo "=== Recursos de ícone em Assets.car ==="
+          xcrun assetutil --info "$APP_PATH/Assets.car" 2>/dev/null \
+            | grep -i -E 'AppIcon|IconName|Icon' \
+            | head -80 || true
+
+
+
       - name: Empacotar IPA
         run: |
           mkdir -p Payload
