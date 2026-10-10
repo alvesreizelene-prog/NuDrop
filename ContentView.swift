@@ -113,6 +113,22 @@ struct ContentView: View {
             content.title = "Transferência recebida"
             content.body = "Você recebeu R$ \(amount) de \(sender)."
             content.sound = .default
+            if let imageURL = Bundle.main.url(
+    forResource: "logo",
+    withExtension: "png"
+) {
+    do {
+        let attachment = try UNNotificationAttachment(
+            identifier: "logo",
+            url: imageURL,
+            options: nil
+        )
+        content.attachments = [attachment]
+    } catch {
+        print("Erro ao anexar imagem: \(error)")
+    }
+}
+                                        
 
             let trigger = UNTimeIntervalNotificationTrigger(
                 timeInterval: delay,
