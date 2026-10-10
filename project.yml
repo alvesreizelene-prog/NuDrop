@@ -1,5 +1,4 @@
-
-name: NuDrop
+name: NuDropJorranesDev
 
 options:
   bundleIdPrefix: com.teste
@@ -12,6 +11,7 @@ targets:
     sources:
       - NuDropApp.swift
       - ContentView.swift
+      - Assets.xcassets
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.teste.nudrop
