@@ -1,139 +1,120 @@
+
 import SwiftUI
 import UserNotifications
 
-@main
-struct NuDropApp: App {
-    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
-    }
-}
-
-class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
-        UNUserNotificationCenter.current().delegate = self
-        return true
-    }
-    
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        completionHandler([.banner, .sound, .badge])
-    }
-}
-
 struct ContentView: View {
-    @State private var amount: String = "1.200,00"
-    @State private var sender: String = "PAYMANTS BIT LTDA"
-    @State private var count: String = "7"
-    @State private var interval: String = "1"
-    @State private var isMinutes: Bool = false
-    @State private var isRunning: Bool = false
-    
+    @State private var notificationsEnabled = false
+    @State private var amount = "1.200,00"
+    @State private var sender = "PAYMANTS BIT LTDA"
+    @State private var count = "7"
+    @State private var interval = "1"
+    @State private var isMinutes = false
+    @State private var status = "Pronto"
+
     var body: some View {
-        VStack(spacing: 20) {
-            Text("Notf jorranesDEV")
-                .font(.title)
-                .fontWeight(.bold)
-            
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Altere o valor (R$)")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                TextField("1.200,00", text: $amount)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+        VStack(spacing: 18) {
+            Image(systemName: "bell.badge.fill")
+                .font(.system(size: 48))
+                .foregroundColor(.purple)
+
+            Text("NuDrop")
+                .font(.largeTitle.bold())
+
+            TextField("Valor (R$)", text: $amount)
+                .textFieldStyle(.roundedBorder)
+
+            TextField("Nome do remetente", text: $sender)
+                .textFieldStyle(.roundedBorder)
+
+            HStack {
+                TextField("Quantidade", text: $count)
+                    .keyboardType(.numberPad)
+                    .textFieldStyle(.roundedBorder)
+
+                TextField("Intervalo", text: $interval)
                     .keyboardType(.decimalPad)
+                    .textFieldStyle(.roundedBorder)
             }
-            .padding(.horizontal)
-            
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Altere o nome / remetente")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                TextField("PAYMANTS BIT LTDA", text: $sender)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+
+            Toggle("Intervalo em minutos", isOn: $isMinutes)
+
+            Button("Ativar notificações") {
+                UNUserNotificationCenter.current()
+                    .requestAuthorization(
+                        options: [.alert, .sound, .badge]
+                    ) { granted, error in
+                        DispatchQueue.main.async {
+                            notificationsEnabled = granted
+                            status = granted
+                                ? "Permissão concedida"
+                                : "Permissão não concedida"
+
+                            if let error = error {
+                                status = error.localizedDescription
+                            }
+                        }
+                    }
             }
-            .padding(.horizontal)
-            
-            HStack {
-                Button(action: { isMinutes = false }) {
-                    Text("Segundos")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(isMinutes ? Color.gray : Color.purple)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                }
-                Button(action: { isMinutes = true }) {
-                    Text("Minutos")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(isMinutes ? Color.purple : Color.gray)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                }
+            .buttonStyle(.bordered)
+
+            Button("Enviar notificação de teste") {
+                sendTestNotification()
             }
-            .padding(.horizontal)
-            
-            HStack {
-                VStack(alignment: .leading) {
-                    Text("Quantidade").font(.caption).foregroundColor(.gray)
-                    TextField("7", text: $count).textFieldStyle(RoundedBorderTextFieldStyle()).keyboardType(.numberPad)
-                }
-                VStack(alignment: .leading) {
-                    Text("Intervalo").font(.caption).foregroundColor(.gray)
-                    TextField("1", text: $interval).textFieldStyle(RoundedBorderTextFieldStyle()).keyboardType(.numberPad)
-                }
-            }
-            .padding(.horizontal)
-            
-            Button(action: {
-                requestPermissionAndFire()
-            }) {
-                Text(isRunning ? "Parar" : "Disparar")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(isRunning ? Color.red : Color.green)
-                    .foregroundColor(.white)
-                    .fontWeight(.bold)
-                    .cornerRadius(12)
-            }
-            .padding(.horizontal)
-            
+            .buttonStyle(.borderedProminent)
+
+            Text(status)
+                .font(.caption)
+                .multilineTextAlignment(.center)
+
             Spacer()
-            
+
             Text("desenvolvido by jorranes")
                 .font(.caption)
-                .foregroundColor(.gray)
+                .foregroundColor(.secondary)
         }
         .padding()
     }
-    
-    func requestPermissionAndFire() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
-            if granted {
+
+    private func sendTestNotification() {
+        let center = UNUserNotificationCenter.current()
+
+        center.getNotificationSettings { settings in
+            guard settings.authorizationStatus == .authorized else {
                 DispatchQueue.main.async {
-                    self.fireNotifications()
+                    status = "Ative as notificações nos Ajustes."
+                }
+                return
+            }
+
+            let delayValue = Double(
+                interval.replacingOccurrences(of: ",", with: ".")
+            ) ?? 1
+
+            let delay = max(1, delayValue * (isMinutes ? 60 : 1))
+
+            let content = UNMutableNotificationContent()
+            content.title = "NuDrop — Teste"
+            content.body = "Valor: R$ \(amount) | Remetente: \(sender)"
+            content.sound = .default
+
+            let trigger = UNTimeIntervalNotificationTrigger(
+                timeInterval: delay,
+                repeats: false
+            )
+
+            let request = UNNotificationRequest(
+                identifier: UUID().uuidString,
+                content: content,
+                trigger: trigger
+            )
+
+            center.add(request) { error in
+                DispatchQueue.main.async {
+                    status = error == nil
+                        ? "Notificação de teste agendada."
+                        : "Erro ao agendar a notificação."
                 }
             }
-        }
-    }
-    
-    func fireNotifications() {
-        let total = Int(count) ?? 7
-        let delay = Double(interval) ?? 1.0
-        let timeInterval = isMinutes ? delay * 60 : delay
-        
-        for i in 0..<total {
-            let content = UNMutableNotificationContent()
-            content.title = "Transferência recebida"
-            content.body = "Você recebeu uma transferência de \(amount) de \(sender)."
-            content.sound = .default
-            
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(i) * timeInterval, repeats: false)
-            let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
-            UNUserNotificationCenter.current().add(request)
         }
     }
 }
