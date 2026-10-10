@@ -12,11 +12,13 @@ targets:
       - NuDropApp.swift
       - ContentView.swift
       - Assets.xcassets
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.teste.nudrop
-        PRODUCT_NAME: NuDrop
-        SWIFT_VERSION: "5.0"
-        TARGETED_DEVICE_FAMILY: "1,2"
-        GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_UIUserInterfaceStyle: Automatic
+settings:
+  base:
+    PRODUCT_BUNDLE_IDENTIFIER: com.teste.nudrop
+    PRODUCT_NAME: NuDrop
+    SWIFT_VERSION: "5.0"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    GENERATE_INFOPLIST_FILE: YES
+    INFOPLIST_KEY_UIUserInterfaceStyle: Automatic
+    ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+
