@@ -1,4 +1,4 @@
-
+```yaml
 name: Build iOS IPA
 
 on:
@@ -9,6 +9,7 @@ on:
 jobs:
   build-ios:
     runs-on: macos-15
+
     steps:
       - name: Baixar o código
         uses: actions/checkout@v4
@@ -16,8 +17,17 @@ jobs:
       - name: Instalar XcodeGen
         run: brew install xcodegen
 
+      - name: Conferir arquivos
+        run: |
+          pwd
+          ls -la
+          cat project.yml
+
       - name: Gerar projeto Xcode
-        run: xcodegen generate
+        run: |
+          xcodegen generate
+          ls -la
+          test -d NuDrop.xcodeproj
 
       - name: Compilar aplicativo
         run: |
@@ -35,10 +45,11 @@ jobs:
         run: |
           mkdir -p Payload
           cp -R build/Build/Products/Release-iphoneos/NuDrop.app Payload/
-          zip -r NuDrop-unsigned.ipa Payload
+          /usr/bin/zip -r NuDrop-unsigned.ipa Payload
 
       - name: Disponibilizar IPA
         uses: actions/upload-artifact@v4
         with:
           name: NuDrop-unsigned-ipa
           path: NuDrop-unsigned.ipa
+```
