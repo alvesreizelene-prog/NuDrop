@@ -65,7 +65,7 @@ struct ContentView: View {
             }
             .buttonStyle(.bordered)
 
-            Button("Enviar notificação de teste") {
+            Button("Enviar notificação ") {
                 sendTestNotification()
             }
             .buttonStyle(.borderedProminent)
@@ -110,7 +110,7 @@ struct ContentView: View {
             let delay = max(1, value * (isMinutes ? 60 : 1))
 
             let content = UNMutableNotificationContent()
-            content.title = "Transferência recebida (teste)"
+            content.title = "Transferência recebida"
             content.body = "Você recebeu R$ \(amount) de \(sender)."
             content.sound = .default
 
