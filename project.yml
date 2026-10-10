@@ -18,3 +18,5 @@ targets:
         PRODUCT_NAME: NuDrop
         SWIFT_VERSION: "5.0"
         TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UIUserInterfaceStyle: Automatic
